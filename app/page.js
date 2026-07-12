@@ -1,6 +1,7 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { createClient } from "../utils/supabase/client";
 import * as lamejs from "@breezystack/lamejs";
 
 const KNOBS = [
@@ -19,6 +20,7 @@ export default function Home() {
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [abMode, setAbMode] = useState("B");
+  const [user, setUser] = useState(undefined); // undefined = checking, null = logged out
   const [params, setParams] = useState(() => {
     const p = {};
     KNOBS.forEach(([id, , def]) => (p[id] = def));
@@ -31,6 +33,22 @@ export default function Home() {
   const rawRef = useRef(null);
   const startTimeRef = useRef(0);
   const endTimerRef = useRef(null);
+  const authRef = useRef(null);
+
+  useEffect(() => {
+    const auth = createClient();
+    authRef.current = auth;
+    auth.auth.getUser().then(({ data }) => setUser(data && data.user ? data.user : null));
+  }, []);
+
+  async function signOut() {
+    if (authRef.current) await authRef.current.auth.signOut();
+    setUser(null);
+    setReady(false);
+    setStatus("");
+    stopAll();
+    setPlaying(false);
+  }
 
   const ctx = () => {
     if (!acRef.current) acRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -387,10 +405,28 @@ export default function Home() {
           </div>
         </div>
 
-        <label style={S.drop}>
-          <input type="file" accept="audio/*" onChange={handleFile} disabled={busy} style={{ display: "none" }} />
-          <span style={S.dropText}>{busy ? "Working..." : "＋ Choose an audio file"}</span>
-        </label>
+        {user === undefined && (
+          <div style={S.dropText}>Loading…</div>
+        )}
+
+        {user === null && (
+          <a href="/login" style={S.drop}>
+            <span style={S.dropText}>Log in to humanize your track</span>
+          </a>
+        )}
+
+        {user && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+            <label style={S.drop}>
+              <input type="file" accept="audio/*" onChange={handleFile} disabled={busy} style={{ display: "none" }} />
+              <span style={S.dropText}>{busy ? "Working..." : "＋ Choose an audio file"}</span>
+            </label>
+            <div style={S.account}>
+              <span style={{ color: "#8ea2c8" }}>{user.email}</span>
+              <button onClick={signOut} style={S.linkBtn}>Log out</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {status && <p style={S.status}>{status}</p>}
@@ -433,8 +469,10 @@ const S = {
   overlay: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "linear-gradient(180deg, rgba(10,14,26,0.45), rgba(10,14,26,0.78))", zIndex: 1 },
   topBar: { position: "relative", zIndex: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap", padding: "32px 48px" },
   logoBox: { width: 54, height: 54, borderRadius: 14, background: "rgba(15,23,48,0.9)", border: "1px solid #2b6cff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  drop: { border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)" },
+  drop: { border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)", display: "inline-block" },
   dropText: { color: "#3df0ff", fontSize: 15, fontWeight: 600 },
+  account: { display: "flex", alignItems: "center", gap: 10, fontSize: 12 },
+  linkBtn: { background: "transparent", color: "#3df0ff", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", padding: 0 },
   status: { position: "relative", zIndex: 2, color: "#8ea2c8", fontSize: 13, padding: "0 48px", fontFamily: "monospace" },
   progressTrack: { position: "relative", zIndex: 2, margin: "10px 48px", height: 6, background: "rgba(15,23,48,0.9)", borderRadius: 4, overflow: "hidden", maxWidth: 400 },
   progressBar: { height: "100%", width: "40%", background: "#3df0ff", borderRadius: 4, animation: "slide 1.2s ease-in-out infinite" },
