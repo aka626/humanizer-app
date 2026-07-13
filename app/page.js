@@ -1,6 +1,5 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { supabase } from "../lib/supabase";
 import { createClient } from "../utils/supabase/client";
 import * as lamejs from "@breezystack/lamejs";
 
@@ -81,16 +80,22 @@ export default function Home() {
     paidRef.current = false;
     try {
       setStatus("Uploading your track...");
+      const auth = authRef.current || createClient();
       const filename = `${Date.now()}-${file.name}`;
-      const { error: upErr } = await supabase.storage.from("uploads").upload(filename, file);
+      const { error: upErr } = await auth.storage.from("uploads").upload(filename, file);
       if (upErr) throw new Error("Upload failed: " + upErr.message);
-      const { data } = supabase.storage.from("uploads").getPublicUrl(filename);
+      const { data: signed, error: signErr } = await auth.storage
+        .from("uploads")
+        .createSignedUrl(filename, 600);
+      if (signErr || !signed || !signed.signedUrl) {
+        throw new Error("Could not create a link for processing: " + (signErr ? signErr.message : "no URL"));
+      }
 
       setStatus("Separating (about 30 seconds)...");
       const res = await fetch("/api/separate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audioUrl: data.publicUrl }),
+        body: JSON.stringify({ audioUrl: signed.signedUrl }),
       });
       const json = await res.json();
       if (json.error) {
