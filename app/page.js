@@ -21,6 +21,9 @@ export default function Home() {
   const [playing, setPlaying] = useState(false);
   const [abMode, setAbMode] = useState("B");
   const [user, setUser] = useState(undefined); // undefined = checking, null = logged out
+  const [credits, setCredits] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [buyNeeded, setBuyNeeded] = useState(false);
   const [params, setParams] = useState(() => {
     const p = {};
     KNOBS.forEach(([id, , def]) => (p[id] = def));
@@ -34,11 +37,27 @@ export default function Home() {
   const startTimeRef = useRef(0);
   const endTimerRef = useRef(null);
   const authRef = useRef(null);
+  const paidRef = useRef(false);
+
+  async function loadCredits() {
+    try {
+      const res = await fetch("/api/credits");
+      const json = await res.json();
+      if (json && json.ok) {
+        setCredits(json.balance);
+        setIsOwner(!!json.isOwner);
+      }
+    } catch {}
+  }
 
   useEffect(() => {
     const auth = createClient();
     authRef.current = auth;
-    auth.auth.getUser().then(({ data }) => setUser(data && data.user ? data.user : null));
+    auth.auth.getUser().then(({ data }) => {
+      const u = data && data.user ? data.user : null;
+      setUser(u);
+      if (u) loadCredits();
+    });
   }, []);
 
   async function signOut() {
@@ -58,7 +77,8 @@ export default function Home() {
   async function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    setBusy(true); setReady(false); setPlaying(false);
+    setBusy(true); setReady(false); setPlaying(false); setBuyNeeded(false);
+    paidRef.current = false;
     try {
       setStatus("Uploading your track...");
       const filename = `${Date.now()}-${file.name}`;
@@ -73,9 +93,13 @@ export default function Home() {
         body: JSON.stringify({ audioUrl: data.publicUrl }),
       });
       const json = await res.json();
-      if (json.error) throw new Error(json.error);
+      if (json.error) {
+        if (json.needCredits) setBuyNeeded(true);
+        throw new Error(json.error);
+      }
       const s = json.stems;
       if (!s.vocals || !s.no_vocals) throw new Error("Missing stems in response");
+      if (typeof json.creditsLeft === "number") setCredits(json.creditsLeft);
 
       setStatus("Loading stems...");
       const [voc, ins] = await Promise.all([fetchDecode(s.vocals), fetchDecode(s.no_vocals)]);
@@ -84,6 +108,7 @@ export default function Home() {
 
       setReady(true);
       setStatus("Done. Your track is humanized. Press play to hear it, and flip Original / Humanized to compare.");
+      loadCredits();
     } catch (err) {
       setStatus("Error: " + err.message);
     }
@@ -282,8 +307,32 @@ export default function Home() {
     return await oc.startRendering();
   }
 
+  async function ensurePaid() {
+    if (isOwner || paidRef.current) return true;
+    try {
+      const res = await fetch("/api/spend-download", { method: "POST" });
+      const json = await res.json();
+      if (json && json.ok) {
+        paidRef.current = true;
+        if (typeof json.remaining === "number") setCredits(json.remaining);
+        return true;
+      }
+      if (json && json.needCredits) {
+        setBuyNeeded(true);
+        setStatus(json.error || "You're out of credits.");
+        return false;
+      }
+      setStatus("Error: " + ((json && json.error) || "Could not unlock download."));
+      return false;
+    } catch (err) {
+      setStatus("Error: " + err.message);
+      return false;
+    }
+  }
+
   async function download() {
     if (!buffersRef.current.vocals && !buffersRef.current.instr) return;
+    if (!(await ensurePaid())) return;
     setStatus("Rendering your humanized track...");
     try {
       const rendered = await renderBuffer();
@@ -299,6 +348,7 @@ export default function Home() {
 
   async function downloadMp3() {
     if (!buffersRef.current.vocals && !buffersRef.current.instr) return;
+    if (!(await ensurePaid())) return;
     setStatus("Rendering MP3...");
     try {
       const rendered = await renderBuffer();
@@ -422,6 +472,9 @@ export default function Home() {
               <span style={S.dropText}>{busy ? "Working..." : "＋ Choose an audio file"}</span>
             </label>
             <div style={S.account}>
+              <a href="https://firsttakeaudio.com/buy" target="_blank" rel="noopener noreferrer" style={S.creditChip}>
+                {isOwner ? "∞ credits" : credits === null ? "…" : `${credits} credit${credits === 1 ? "" : "s"}`}
+              </a>
               <span style={{ color: "#8ea2c8" }}>{user.email}</span>
               <button onClick={signOut} style={S.linkBtn}>Log out</button>
             </div>
@@ -430,6 +483,11 @@ export default function Home() {
       </div>
 
       {status && <p style={S.status}>{status}</p>}
+      {buyNeeded && (
+        <a href="https://firsttakeaudio.com/buy" target="_blank" rel="noopener noreferrer" style={S.buyBtn}>
+          Buy credits →
+        </a>
+      )}
       {busy && (<div style={S.progressTrack}><div style={S.progressBar} /></div>)}
 
       {ready && (
@@ -472,6 +530,8 @@ const S = {
   drop: { border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)", display: "inline-block" },
   dropText: { color: "#3df0ff", fontSize: 15, fontWeight: 600 },
   account: { display: "flex", alignItems: "center", gap: 10, fontSize: 12 },
+  creditChip: { background: "rgba(61,240,255,0.12)", border: "1px solid #3df0ff", color: "#3df0ff", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700 },
+  buyBtn: { position: "relative", zIndex: 2, display: "inline-block", margin: "10px 48px 0", background: "#3df0ff", color: "#0a0e1a", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 700, textDecoration: "none" },
   linkBtn: { background: "transparent", color: "#3df0ff", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", padding: 0 },
   status: { position: "relative", zIndex: 2, color: "#8ea2c8", fontSize: 13, padding: "0 48px", fontFamily: "monospace" },
   progressTrack: { position: "relative", zIndex: 2, margin: "10px 48px", height: 6, background: "rgba(15,23,48,0.9)", borderRadius: 4, overflow: "hidden", maxWidth: 400 },
