@@ -83,7 +83,7 @@ export default function Home() {
       buffersRef.current.instr = ins;
 
       setReady(true);
-      setStatus("Ready. Press play, then download.");
+      setStatus("Done. Your track is humanized. Press play to hear it, and flip Original / Humanized to compare.");
     } catch (err) {
       setStatus("Error: " + err.message);
     }
