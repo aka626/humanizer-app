@@ -442,7 +442,7 @@ export default function Home() {
       `}</style>
 
       <div style={S.topBar}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <a href="https://firsttakeaudio.com" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit" }}>
           <div style={S.logoBox}>
             <svg width="30" height="30" viewBox="0 0 26 26" fill="none">
               <rect x="2" y="10" width="2.5" height="6" rx="1.25" fill="#3df0ff"/>
@@ -457,8 +457,12 @@ export default function Home() {
               First Take <span style={{ color: "#3df0ff" }}>Humanizer</span>
             </div>
             <div style={{ fontSize: 12, color: "#8ea2c8", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>AI in. Human out.</div>
+            <div style={{ fontSize: 12, marginTop: 4 }}>
+              <span style={{ color: "#8ea2c8" }}>Part of First Take Audio · </span>
+              <span style={{ color: "#3df0ff", textDecoration: "underline" }}>Make a full release with Music Forge →</span>
+            </div>
           </div>
-        </div>
+        </a>
 
         {user === undefined && (
           <div style={S.dropText}>Loading…</div>

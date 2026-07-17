@@ -167,7 +167,11 @@ export default function LoginPage() {
         {err && <p style={{ color: "#FF7A6B", fontSize: 13 }} className="mt-4 text-center">{err}</p>}
 
         <p style={{ color: C.faint, fontSize: 11 }} className="mt-5 text-center">
-          One account for Music Forge and the Humanizer.
+          One account for{" "}
+          <a href="https://firsttakeaudio.com" style={{ color: C.cyan, textDecoration: "underline" }}>
+            Music Forge
+          </a>{" "}
+          and the Humanizer.
         </p>
       </div>
     </div>
