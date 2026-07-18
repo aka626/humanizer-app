@@ -480,6 +480,9 @@ export default function Home() {
               <input type="file" accept="audio/*" onChange={handleFile} disabled={busy} style={{ display: "none" }} />
               <span style={S.dropText}>{busy ? "Working..." : "＋ Choose an audio file"}</span>
             </label>
+            <div style={{ color: "#3df0ff", fontSize: 13, fontWeight: 700 }}>
+              Your first track is free. Hearing it costs nothing.
+            </div>
             <div style={S.account}>
               <a href="https://firsttakeaudio.com/buy" target="_blank" rel="noopener noreferrer" style={S.creditChip}>
                 {isOwner ? "∞ credits" : credits === null ? "…" : `${credits} credit${credits === 1 ? "" : "s"}`}
