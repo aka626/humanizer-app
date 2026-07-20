@@ -9,6 +9,7 @@ const midiToName = (m) => NOTE_NAMES[m % 12] + (Math.floor(m / 12) - 1);
 export default function Extract() {
   const [user, setUser] = useState(undefined);
   const [isOwner, setIsOwner] = useState(false);
+  const [credits, setCredits] = useState(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -20,6 +21,7 @@ export default function Extract() {
   const [fileName, setFileName] = useState("");
 
   const acRef = useRef(null);
+  const authRef = useRef(null);
   const bufferRef = useRef(null);
   const paidMidRef = useRef(false);
   const paidPackRef = useRef(false);
@@ -33,16 +35,23 @@ export default function Extract() {
 
   useEffect(() => {
     const auth = createClient();
+    authRef.current = auth;
     auth.auth.getUser().then(({ data }) => {
       const u = data && data.user ? data.user : null;
       setUser(u);
       if (u) {
         fetch("/api/credits").then((r) => r.json()).then((j) => {
-          if (j && j.ok) setIsOwner(!!j.isOwner);
+          if (j && j.ok) { setIsOwner(!!j.isOwner); setCredits(j.balance); }
         }).catch(() => {});
       }
     });
   }, []);
+
+  async function signOut() {
+    if (authRef.current) await authRef.current.auth.signOut();
+    setUser(null);
+    stopAll();
+  }
 
   const ctx = () => {
     if (!acRef.current) acRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -473,24 +482,44 @@ export default function Extract() {
   /* ---------------- render --------------- */
   return (
     <div style={S.page}>
-      <div style={S.wrap}>
-        <a href="https://firsttakeaudio.com" style={S.back}>← Dashboard</a>
-        <div style={{ marginTop: 24, marginBottom: 6, fontSize: 30, fontWeight: 700, letterSpacing: "-0.5px" }}>
-          MIDI <span style={{ color: "#3df0ff" }}>Extractor</span>
-        </div>
-        <div style={{ fontSize: 12, color: "#8ea2c8", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>
-          Keep the sound. Rewrite the notes.
-        </div>
-        <div style={{ fontSize: 12, marginBottom: 6 }}>
-          <a href="https://firsttakeaudio.com/forge" style={{ color: "#3df0ff", textDecoration: "none" }}>Music Forge →</a>
-          <span style={{ color: "#54688a" }}> · </span>
-          <a href="/" style={{ color: "#3df0ff", textDecoration: "none" }}>Humanizer →</a>
-        </div>
-        <div style={{ fontSize: 12, color: "#54688a", marginBottom: 28 }}>
-          Works best on melodies, basslines, leads, and single stems. Dense full mixes come out approximate.
+      <video autoPlay muted loop playsInline style={S.video}>
+        <source src="/bg.mp4" type="video/mp4" />
+      </video>
+      <div style={S.overlay} />
+
+      <div style={S.topBar}>
+        <div>
+          <a href="https://firsttakeaudio.com" style={{ color: "#8ea2c8", fontSize: 13, textDecoration: "none" }}>← Dashboard</a>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10 }}>
+            <div style={S.logoBox}>
+              <svg width="30" height="30" viewBox="0 0 26 26" fill="none">
+                <rect x="2" y="10" width="2.5" height="6" rx="1.25" fill="#3df0ff"/>
+                <rect x="6.5" y="6" width="2.5" height="14" rx="1.25" fill="#3df0ff"/>
+                <rect x="11" y="2" width="2.5" height="22" rx="1.25" fill="#2b6cff"/>
+                <rect x="15.5" y="7" width="2.5" height="12" rx="1.25" fill="#3df0ff"/>
+                <rect x="20" y="11" width="2.5" height="4" rx="1.25" fill="#3df0ff"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", lineHeight: 1.1 }}>
+                First Take <span style={{ color: "#3df0ff" }}>MIDI Extractor</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#8ea2c8", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>Keep the sound. Rewrite the notes.</div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>
+                <a href="https://firsttakeaudio.com/forge" style={{ color: "#3df0ff", textDecoration: "none" }}>Music Forge →</a>
+                <span style={{ color: "#54688a" }}> · </span>
+                <a href="/" style={{ color: "#3df0ff", textDecoration: "none" }}>Humanizer →</a>
+              </div>
+              <div style={{ fontSize: 11, color: "#54688a", marginTop: 4 }}>
+                Works best on melodies, basslines, leads, and single stems. Dense full mixes come out approximate.
+              </div>
+            </div>
+          </div>
         </div>
 
-        {user === undefined && <p style={S.muted}>Loading…</p>}
+        {user === undefined && (
+          <div style={S.dropText}>Loading…</div>
+        )}
 
         {user === null && (
           <a href="/login" style={S.drop}>
@@ -499,16 +528,26 @@ export default function Extract() {
         )}
 
         {user && (
-          <>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
             <label style={S.drop}>
               <input type="file" accept="audio/*" onChange={handleFile} disabled={busy} style={{ display: "none" }} />
               <span style={S.dropText}>{busy ? "Working..." : "＋ Choose an audio file"}</span>
             </label>
-            <p style={{ color: "#3df0ff", fontSize: 13, fontWeight: 700, marginTop: 10 }}>
+            <div style={{ color: "#3df0ff", fontSize: 13, fontWeight: 700 }}>
               Previews are free. The .mid costs 1 credit. The voice pack costs 1 more.
-            </p>
-          </>
+            </div>
+            <div style={S.account}>
+              <a href="https://firsttakeaudio.com/buy" target="_blank" rel="noopener noreferrer" style={S.creditChip}>
+                {isOwner ? "∞ credits" : credits === null ? "…" : `${credits} credit${credits === 1 ? "" : "s"}`}
+              </a>
+              <span style={{ color: "#8ea2c8" }}>{user.email}</span>
+              <button onClick={signOut} style={S.linkBtn}>Log out</button>
+            </div>
+          </div>
         )}
+      </div>
+
+      <div style={S.contentWrap}>
 
         {status && <p style={S.status}>{status}</p>}
         {busy && progress > 0 && (
@@ -556,17 +595,22 @@ export default function Extract() {
 }
 
 const S = {
-  page: { minHeight: "100vh", background: "#0a0e1a", color: "#ffffff", fontFamily: "system-ui, sans-serif" },
-  wrap: { maxWidth: 900, margin: "0 auto", padding: "40px 24px" },
-  back: { color: "#8ea2c8", fontSize: 13, textDecoration: "none" },
-  muted: { color: "#8ea2c8", fontSize: 13 },
-  drop: { display: "inline-block", border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)" },
+  page: { minHeight: "100vh", background: "#0a0e1a", color: "#ffffff", fontFamily: "system-ui, sans-serif", position: "relative", overflow: "hidden" },
+  video: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0, opacity: 0.9 },
+  overlay: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "linear-gradient(180deg, rgba(10,14,26,0.45), rgba(10,14,26,0.78))", zIndex: 1 },
+  topBar: { position: "relative", zIndex: 2, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24, flexWrap: "wrap", padding: "32px 48px" },
+  logoBox: { width: 54, height: 54, borderRadius: 14, background: "rgba(15,23,48,0.9)", border: "1px solid #2b6cff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  contentWrap: { position: "relative", zIndex: 2, padding: "0 48px 48px", maxWidth: 1100 },
+  drop: { border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)", display: "inline-block" },
   dropText: { color: "#3df0ff", fontSize: 15, fontWeight: 600 },
-  status: { color: "#8ea2c8", fontSize: 13, fontFamily: "monospace", marginTop: 16 },
+  account: { display: "flex", alignItems: "center", gap: 10, fontSize: 12 },
+  creditChip: { background: "rgba(61,240,255,0.12)", border: "1px solid #3df0ff", color: "#3df0ff", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700, textDecoration: "none" },
+  linkBtn: { background: "transparent", color: "#3df0ff", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", padding: 0 },
+  status: { color: "#8ea2c8", fontSize: 13, fontFamily: "monospace", marginTop: 4 },
   progressTrack: { marginTop: 10, height: 6, background: "rgba(15,23,48,0.9)", borderRadius: 4, overflow: "hidden", maxWidth: 400 },
   progressBar: { height: "100%", background: "#3df0ff", borderRadius: 4, transition: "width .3s ease" },
   buyBtn: { display: "inline-block", marginTop: 12, background: "#3df0ff", color: "#0a0e1a", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 700, textDecoration: "none" },
-  card: { marginTop: 24, background: "rgba(8,11,22,0.7)", border: "1px solid rgba(43,108,255,0.5)", borderRadius: 12, padding: 16 },
+  card: { marginTop: 16, background: "rgba(8,11,22,0.7)", border: "1px solid rgba(43,108,255,0.5)", borderRadius: 12, padding: 16, backdropFilter: "blur(3px)" },
   canvas: { width: "100%", height: "auto", borderRadius: 8, display: "block" },
   rollRow: { marginTop: 12 },
   rollInfo: { color: "#8ea2c8", fontSize: 12, fontFamily: "monospace" },
