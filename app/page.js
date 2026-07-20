@@ -466,6 +466,11 @@ export default function Home() {
           </a>
         </div>
 
+        <a href="/extract" style={S.extractTag}>
+          <span style={S.tagDot} />
+          <span><b style={{ color: "#3df0ff" }}>NEW · The MIDI Extractor</b> — keep the sound, rewrite the notes →</span>
+        </a>
+
         {user === undefined && (
           <div style={S.dropText}>Loading…</div>
         )}
@@ -495,11 +500,6 @@ export default function Home() {
           </div>
         )}
       </div>
-
-      <a href="/extract" style={S.extractTag}>
-        <span style={S.tagDot} />
-        <span><b style={{ color: "#3df0ff" }}>NEW · The MIDI Extractor</b> — keep the sound, rewrite the notes →</span>
-      </a>
 
       {status && <p style={S.status}>{status}</p>}
       {buyNeeded && (
@@ -550,11 +550,10 @@ const S = {
   dropText: { color: "#3df0ff", fontSize: 15, fontWeight: 600 },
   account: { display: "flex", alignItems: "center", gap: 10, fontSize: 12 },
   extractTag: {
-    position: "absolute", top: 170, left: "50%", transform: "translateX(-50%)", zIndex: 3,
-    display: "flex", alignItems: "center", gap: 10, maxWidth: "92%",
+    display: "flex", alignItems: "center", gap: 10,
     background: "rgba(10,14,26,0.82)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
     border: "1.5px solid #3df0ff", borderRadius: 16, padding: "14px 22px",
-    color: "#ffffff", fontWeight: 700, fontSize: 19, textDecoration: "none",
+    color: "#ffffff", fontWeight: 700, fontSize: 17, textDecoration: "none",
     boxShadow: "0 10px 34px -12px rgba(61,240,255,0.7)",
   },
   tagDot: { width: 11, height: 11, borderRadius: "50%", background: "#3df0ff", boxShadow: "0 0 12px #3df0ff", flexShrink: 0 },
