@@ -443,7 +443,8 @@ export default function Home() {
 
       <div style={S.topBar}>
         <div>
-          <a href="https://firsttakeaudio.com" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit" }}>
+          <a href="https://firsttakeaudio.com" style={{ color: "#8ea2c8", fontSize: 13, textDecoration: "none" }}>← Dashboard</a>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10 }}>
             <div style={S.logoBox}>
               <svg width="30" height="30" viewBox="0 0 26 26" fill="none">
                 <rect x="2" y="10" width="2.5" height="6" rx="1.25" fill="#3df0ff"/>
@@ -459,17 +460,13 @@ export default function Home() {
               </div>
               <div style={{ fontSize: 12, color: "#8ea2c8", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>AI in. Human out.</div>
               <div style={{ fontSize: 12, marginTop: 4 }}>
-                <span style={{ color: "#8ea2c8" }}>Part of First Take Audio · </span>
-                <span style={{ color: "#3df0ff", textDecoration: "underline" }}>Make a full release with Music Forge →</span>
+                <a href="https://firsttakeaudio.com/forge" style={{ color: "#3df0ff", textDecoration: "none" }}>Music Forge →</a>
+                <span style={{ color: "#54688a" }}> · </span>
+                <a href="/extract" style={{ color: "#3df0ff", textDecoration: "none" }}>MIDI Extractor →</a>
               </div>
             </div>
-          </a>
+          </div>
         </div>
-
-        <a href="/extract" style={S.extractTag}>
-          <span style={S.tagDot} />
-          <span><b style={{ color: "#3df0ff" }}>NEW · The MIDI Extractor</b> — keep the sound, rewrite the notes →</span>
-        </a>
 
         {user === undefined && (
           <div style={S.dropText}>Loading…</div>
@@ -549,14 +546,6 @@ const S = {
   drop: { border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)", display: "inline-block" },
   dropText: { color: "#3df0ff", fontSize: 15, fontWeight: 600 },
   account: { display: "flex", alignItems: "center", gap: 10, fontSize: 12 },
-  extractTag: {
-    display: "flex", alignItems: "center", gap: 10,
-    background: "rgba(10,14,26,0.82)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-    border: "1.5px solid #3df0ff", borderRadius: 16, padding: "14px 22px",
-    color: "#ffffff", fontWeight: 700, fontSize: 17, textDecoration: "none",
-    boxShadow: "0 10px 34px -12px rgba(61,240,255,0.7)",
-  },
-  tagDot: { width: 11, height: 11, borderRadius: "50%", background: "#3df0ff", boxShadow: "0 0 12px #3df0ff", flexShrink: 0 },
   creditChip: { background: "rgba(61,240,255,0.12)", border: "1px solid #3df0ff", color: "#3df0ff", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700 },
   buyBtn: { position: "relative", zIndex: 2, display: "inline-block", margin: "10px 48px 0", background: "#3df0ff", color: "#0a0e1a", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 700, textDecoration: "none" },
   linkBtn: { background: "transparent", color: "#3df0ff", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", padding: 0 },

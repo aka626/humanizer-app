@@ -474,12 +474,17 @@ export default function Extract() {
   return (
     <div style={S.page}>
       <div style={S.wrap}>
-        <a href="/" style={S.back}>← Back to the Humanizer</a>
+        <a href="https://firsttakeaudio.com" style={S.back}>← Dashboard</a>
         <div style={{ marginTop: 24, marginBottom: 6, fontSize: 30, fontWeight: 700, letterSpacing: "-0.5px" }}>
           MIDI <span style={{ color: "#3df0ff" }}>Extractor</span>
         </div>
         <div style={{ fontSize: 12, color: "#8ea2c8", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>
           Keep the sound. Rewrite the notes.
+        </div>
+        <div style={{ fontSize: 12, marginBottom: 6 }}>
+          <a href="https://firsttakeaudio.com/forge" style={{ color: "#3df0ff", textDecoration: "none" }}>Music Forge →</a>
+          <span style={{ color: "#54688a" }}> · </span>
+          <a href="/" style={{ color: "#3df0ff", textDecoration: "none" }}>Humanizer →</a>
         </div>
         <div style={{ fontSize: 12, color: "#54688a", marginBottom: 28 }}>
           Works best on melodies, basslines, leads, and single stems. Dense full mixes come out approximate.
