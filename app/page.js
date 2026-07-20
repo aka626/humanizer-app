@@ -442,27 +442,32 @@ export default function Home() {
       `}</style>
 
       <div style={S.topBar}>
-        <a href="https://firsttakeaudio.com" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit" }}>
-          <div style={S.logoBox}>
-            <svg width="30" height="30" viewBox="0 0 26 26" fill="none">
-              <rect x="2" y="10" width="2.5" height="6" rx="1.25" fill="#3df0ff"/>
-              <rect x="6.5" y="6" width="2.5" height="14" rx="1.25" fill="#3df0ff"/>
-              <rect x="11" y="2" width="2.5" height="22" rx="1.25" fill="#2b6cff"/>
-              <rect x="15.5" y="7" width="2.5" height="12" rx="1.25" fill="#3df0ff"/>
-              <rect x="20" y="11" width="2.5" height="4" rx="1.25" fill="#3df0ff"/>
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", lineHeight: 1.1 }}>
-              First Take <span style={{ color: "#3df0ff" }}>Humanizer</span>
+        <div>
+          <a href="https://firsttakeaudio.com" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit" }}>
+            <div style={S.logoBox}>
+              <svg width="30" height="30" viewBox="0 0 26 26" fill="none">
+                <rect x="2" y="10" width="2.5" height="6" rx="1.25" fill="#3df0ff"/>
+                <rect x="6.5" y="6" width="2.5" height="14" rx="1.25" fill="#3df0ff"/>
+                <rect x="11" y="2" width="2.5" height="22" rx="1.25" fill="#2b6cff"/>
+                <rect x="15.5" y="7" width="2.5" height="12" rx="1.25" fill="#3df0ff"/>
+                <rect x="20" y="11" width="2.5" height="4" rx="1.25" fill="#3df0ff"/>
+              </svg>
             </div>
-            <div style={{ fontSize: 12, color: "#8ea2c8", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>AI in. Human out.</div>
-            <div style={{ fontSize: 12, marginTop: 4 }}>
-              <span style={{ color: "#8ea2c8" }}>Part of First Take Audio · </span>
-              <span style={{ color: "#3df0ff", textDecoration: "underline" }}>Make a full release with Music Forge →</span>
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", lineHeight: 1.1 }}>
+                First Take <span style={{ color: "#3df0ff" }}>Humanizer</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#8ea2c8", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: 2 }}>AI in. Human out.</div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>
+                <span style={{ color: "#8ea2c8" }}>Part of First Take Audio · </span>
+                <span style={{ color: "#3df0ff", textDecoration: "underline" }}>Make a full release with Music Forge →</span>
+              </div>
             </div>
-          </div>
-        </a>
+          </a>
+          <a href="/extract" style={{ display: "inline-block", marginTop: 8, color: "#3df0ff", fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>
+            NEW · MIDI Extractor: keep the sound, rewrite the notes →
+          </a>
+        </div>
 
         {user === undefined && (
           <div style={S.dropText}>Loading…</div>
