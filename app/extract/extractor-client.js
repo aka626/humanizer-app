@@ -5,11 +5,13 @@ import { createClient } from "../../utils/supabase/client";
 const MODEL_URL = "/basic-pitch/model.json";
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const midiToName = (m) => NOTE_NAMES[m % 12] + (Math.floor(m / 12) - 1);
+const AUDIO_ACCEPT = "audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.aiff,.aif";
 
 export default function Extract() {
   const [user, setUser] = useState(undefined);
   const [isOwner, setIsOwner] = useState(false);
   const [credits, setCredits] = useState(null);
+  const [isIOS, setIsIOS] = useState(false);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -45,6 +47,11 @@ export default function Extract() {
         }).catch(() => {});
       }
     });
+
+    const ua = navigator.userAgent || "";
+    const iOSByUA = /iPad|iPhone|iPod/.test(ua);
+    const iPadOS13Plus = ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
+    setIsIOS(iOSByUA || iPadOS13Plus);
   }, []);
 
   async function signOut() {
@@ -530,9 +537,14 @@ export default function Extract() {
         {user && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
             <label style={S.drop}>
-              <input type="file" accept="audio/*" onChange={handleFile} disabled={busy} style={{ display: "none" }} />
+              <input type="file" accept={AUDIO_ACCEPT} onChange={handleFile} disabled={busy} style={{ display: "none" }} />
               <span style={S.dropText}>{busy ? "Working..." : "＋ Choose an audio file"}</span>
             </label>
+            {isIOS && (
+              <div style={S.iosHint}>
+                On iPhone/iPad, tap <b>Browse</b> or <b>Files</b>, not Photos — your tracks live in Files or a music app.
+              </div>
+            )}
             <div style={{ color: "#3df0ff", fontSize: 13, fontWeight: 700 }}>
               Previews are free. The .mid costs 1 credit. The voice pack costs 1 more.
             </div>
@@ -603,6 +615,7 @@ const S = {
   contentWrap: { position: "relative", zIndex: 2, padding: "0 48px 48px", maxWidth: 1100 },
   drop: { border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)", display: "inline-block" },
   dropText: { color: "#3df0ff", fontSize: 15, fontWeight: 600 },
+  iosHint: { color: "#8ea2c8", fontSize: 11, maxWidth: 260, textAlign: "right", lineHeight: 1.4 },
   account: { display: "flex", alignItems: "center", gap: 10, fontSize: 12 },
   creditChip: { background: "rgba(61,240,255,0.12)", border: "1px solid #3df0ff", color: "#3df0ff", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700, textDecoration: "none" },
   linkBtn: { background: "transparent", color: "#3df0ff", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", padding: 0 },

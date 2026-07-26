@@ -13,6 +13,8 @@ const KNOBS = [
   ["output", "Output", 85],
 ];
 
+const AUDIO_ACCEPT = "audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.aiff,.aif";
+
 export default function Home() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -23,6 +25,7 @@ export default function Home() {
   const [credits, setCredits] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const [buyNeeded, setBuyNeeded] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const [params, setParams] = useState(() => {
     const p = {};
     KNOBS.forEach(([id, , def]) => (p[id] = def));
@@ -57,6 +60,13 @@ export default function Home() {
       setUser(u);
       if (u) loadCredits();
     });
+
+    // iPhone/iPad detection, including iPadOS 13+ which reports as "MacIntel"
+    // but has touch support, unlike a real Mac.
+    const ua = navigator.userAgent || "";
+    const iOSByUA = /iPad|iPhone|iPod/.test(ua);
+    const iPadOS13Plus = ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
+    setIsIOS(iOSByUA || iPadOS13Plus);
   }, []);
 
   async function signOut() {
@@ -481,9 +491,14 @@ export default function Home() {
         {user && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
             <label style={S.drop}>
-              <input type="file" accept="audio/*" onChange={handleFile} disabled={busy} style={{ display: "none" }} />
+              <input type="file" accept={AUDIO_ACCEPT} onChange={handleFile} disabled={busy} style={{ display: "none" }} />
               <span style={S.dropText}>{busy ? "Working..." : "＋ Choose an audio file"}</span>
             </label>
+            {isIOS && (
+              <div style={S.iosHint}>
+                On iPhone/iPad, tap <b>Browse</b> or <b>Files</b>, not Photos — your tracks live in Files or a music app.
+              </div>
+            )}
             <div style={{ color: "#3df0ff", fontSize: 13, fontWeight: 700 }}>
               Your first track is free. Hearing it costs nothing.
             </div>
@@ -545,6 +560,7 @@ const S = {
   logoBox: { width: 54, height: 54, borderRadius: 14, background: "rgba(15,23,48,0.9)", border: "1px solid #2b6cff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   drop: { border: "2px dashed #2b6cff", borderRadius: 12, padding: "16px 28px", cursor: "pointer", background: "rgba(15,23,48,0.85)", display: "inline-block" },
   dropText: { color: "#3df0ff", fontSize: 15, fontWeight: 600 },
+  iosHint: { color: "#8ea2c8", fontSize: 11, maxWidth: 260, textAlign: "right", lineHeight: 1.4 },
   account: { display: "flex", alignItems: "center", gap: 10, fontSize: 12 },
   creditChip: { background: "rgba(61,240,255,0.12)", border: "1px solid #3df0ff", color: "#3df0ff", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700 },
   buyBtn: { position: "relative", zIndex: 2, display: "inline-block", margin: "10px 48px 0", background: "#3df0ff", color: "#0a0e1a", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 700, textDecoration: "none" },
