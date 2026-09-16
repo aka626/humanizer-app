@@ -500,7 +500,7 @@ export default function Home() {
               </div>
             )}
             <div style={{ color: "#3df0ff", fontSize: 13, fontWeight: 700 }}>
-              Your first track is free. Hearing it costs nothing.
+              $1 per credit. A separation costs 1 credit.
             </div>
             <div style={S.account}>
               <a href="https://firsttakeaudio.com/buy" target="_blank" rel="noopener noreferrer" style={S.creditChip}>
