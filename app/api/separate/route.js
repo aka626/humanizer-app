@@ -29,13 +29,42 @@ function adminClient() {
   });
 }
 
+// Pull the object path out of a Supabase signed URL so we can delete it after.
+// Signed URLs look like:
+//   https://<proj>.supabase.co/storage/v1/object/sign/uploads/<filename>?token=...
+function uploadPathFromUrl(url) {
+  try {
+    const u = new URL(url);
+    const marker = "/uploads/";
+    const idx = u.pathname.indexOf(marker);
+    if (idx === -1) return null;
+    return decodeURIComponent(u.pathname.slice(idx + marker.length));
+  } catch {
+    return null;
+  }
+}
+
+async function deleteUpload(audioUrl) {
+  try {
+    const admin = adminClient();
+    if (!admin) return;
+    const path = uploadPathFromUrl(audioUrl);
+    if (!path) return;
+    await admin.storage.from("uploads").remove([path]);
+  } catch (e) {
+    console.error("Upload cleanup failed:", e);
+  }
+}
+
 export async function POST(request) {
   let runId = null;
   let charged = false;
   let supabase = null;
   let userId = null;
+  let audioUrl = null;
   try {
-    const { audioUrl } = await request.json();
+    const body = await request.json();
+    audioUrl = body.audioUrl;
     if (!audioUrl) {
       return Response.json({ error: "No audio URL provided" }, { status: 400 });
     }
@@ -118,6 +147,11 @@ export async function POST(request) {
       const val = output[key];
       stems[key] = typeof val === "string" ? val : val && val.url ? val.url() : String(val);
     }
+
+    // 5) The source upload has done its job. Delete it so storage never
+    //    accumulates. A failure here must not affect the user's result.
+    await deleteUpload(audioUrl);
+
     return Response.json({ stems, creditsLeft });
   } catch (err) {
     console.error("Separation error:", err);
@@ -127,6 +161,8 @@ export async function POST(request) {
       } catch {}
     }
     if (charged) await refund(userId);
+    // Clean up the upload even on failure, so a failed run leaves nothing behind.
+    if (audioUrl) await deleteUpload(audioUrl);
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
